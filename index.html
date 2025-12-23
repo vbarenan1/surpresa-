@@ -1,0 +1,164 @@
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<audio id="music" loop>
+    <source src="https://www.dropbox.com/scl/fi/om1dgkxnjm4qms6xngj8q/WIU-Rol-de-Sempre-INSTRUMENTAL-8-Nota-Produ-es-youtube.mp3?rlkey=ibyl68ixd7xywgs8vwjqowtk2&st=y9t3rmt3&raw=1" type="audio/mpeg">
+</audio>
+
+<div id="main-wrapper">
+    <div id="cover-screen">
+        <div class="loader-content">
+            <h1 class="glow-text">SURPRESA</h1>
+            <div class="progress-container"><div id="loader-fill"></div></div>
+            <button id="btn-play" onclick="startEverything()" disabled>PREPARANDO...</button>
+        </div>
+    </div>
+
+    <div id="story-viewport" style="display:none;">
+        <div id="bg-1" class="bg-layer active"></div>
+        <div id="bg-2" class="bg-layer"></div>
+        <div class="vignette"></div>
+        <div id="progress-header"></div>
+        
+        <div class="content">
+            <h1 id="story-text" class="story-h1"></h1>
+            
+            <div id="counter-box" style="display:none;">
+                <div class="slot-machine">
+                    <div class="slot-wrapper"><div id="slot-days" class="slot-column"></div></div>
+                    <span class="slot-separator">/</span>
+                    <div class="slot-wrapper"><div id="slot-months" class="slot-column"></div></div>
+                </div>
+            </div>
+
+            <div id="emotional-msg" class="emotional-text animate__animated" style="display:none;"></div>
+        </div>
+
+        <div class="touch-zones">
+            <div class="zone-left" onclick="prevStory()"></div>
+            <div class="zone-right" onclick="nextStory()"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root { --sp-green: #1DB954; --pink: #f037a5; --orange: #f59b23; }
+    body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Inter', sans-serif; overflow: hidden; height: 100%; }
+    #main-wrapper { width: 100%; height: 100vh; max-width: 450px; margin: 0 auto; position: relative; overflow: hidden; }
+    #cover-screen { position: absolute; inset: 0; z-index: 1000; background: #000; display: flex; align-items: center; justify-content: center; text-align: center; }
+    .glow-text { font-family: 'Archivo Black'; font-size: 2.5rem; letter-spacing: 5px; margin-bottom: 20px; }
+    .progress-container { width: 200px; height: 2px; background: rgba(255,255,255,0.1); margin: 20px auto; }
+    #loader-fill { width: 0%; height: 100%; background: var(--sp-green); transition: width 0.3s; }
+    #btn-play { background: white; border: none; padding: 15px 40px; border-radius: 50px; font-weight: 900; cursor: pointer; opacity: 0.5; transition: 0.5s; }
+    #btn-play.ready { opacity: 1; background: var(--sp-green); color: white; animation: pulse 1.5s infinite; }
+    .bg-layer { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transition: opacity 0.8s ease-in-out, transform 15s linear; z-index: 1; filter: brightness(0.6); }
+    .bg-layer.active { opacity: 1; z-index: 2; transform: scale(1.15); }
+    .vignette { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 40%, transparent 60%, rgba(0,0,0,0.9) 100%); z-index: 3; pointer-events: none; }
+    #progress-header { position: absolute; top: 15px; width: 100%; display: flex; gap: 4px; padding: 0 10px; z-index: 100; box-sizing: border-box; }
+    .progress-bar { height: 3px; background: rgba(255,255,255,0.2); flex: 1; border-radius: 2px; overflow: hidden; }
+    .progress-fill { height: 100%; background: white; width: 0%; }
+    .content { position: absolute; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
+    .story-h1 { font-family: 'Archivo Black'; font-size: 3rem; text-transform: uppercase; line-height: 0.9; text-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .slot-machine { display: flex; font-family: 'Archivo Black'; font-size: 5.5rem; color: var(--sp-green); height: 110px; overflow: hidden; margin-bottom: 20px; }
+    .slot-column { display: flex; flex-direction: column; }
+    .slot-column span { height: 110px; display: flex; align-items: center; justify-content: center; }
+    .emotional-text { font-family: 'Archivo Black'; font-size: 1.5rem; text-transform: uppercase; line-height: 1.2; color: white; width: 100%; max-width: 400px; margin-top: 20px; }
+    .touch-zones { position: absolute; inset: 0; z-index: 200; display: flex; }
+    .zone-left, .zone-right { flex: 1; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(29,185,84,0.7); } 70% { box-shadow: 0 0 0 15px rgba(29,185,84,0); } 100% { box-shadow: 0 0 0 0 rgba(29,185,84,0); } }
+</style>
+
+<script>
+    const stories = [
+        { text: "Oi,<br>você tem<br>um minuto?", img: "https://www.dropbox.com/scl/fi/cilbo22puwfefipkj8dp0/Foto-29-11-2025-04-38-14.jpg?rlkey=i11o4u9u7acsyybqksgwzzznh&st=y8y5bf6o&raw=1", anim: "animate__fadeInUp" },
+        { text: "Quer dizer,<br>temos 30 dias<br>pra rever.", img: "https://www.dropbox.com/scl/fi/jtntnn3ftxmuito3o1n33/Foto-23-12-2025-08-16-07.webp?rlkey=vxklmgd83lkj87nrvx5f4kfvk&st=h53iy4tz&raw=1", anim: "animate__fadeInLeft" },
+        { text: "Se sua vida<br>fosse uma<br><span style='color:var(--pink)'>playlist</span>...", img: "https://www.dropbox.com/scl/fi/l5xadpcs7ddvo3i0or6gh/Foto-23-12-2025-08-16-07.jpg?rlkey=g0vkz13u34qwbui1hydjtcu62&st=n2iwkvvv&raw=1", anim: "animate__zoomIn" },
+        { text: "Eu seria o seu<br><span style='color:var(--orange)'>artista</span><br>nº 1?", img: "https://www.dropbox.com/scl/fi/170dct6q7ntgztg1nhdlb/Foto-20-12-2025-22-55-36.jpg?rlkey=4rfiomr59zzop4r9fdsag0f13&st=nxmn4p9s&raw=1", anim: "animate__fadeInRight" },
+        { text: "Porque você<br>com certeza<br>é a minha.", img: "https://www.dropbox.com/scl/fi/9jg1csw1caq78fqi59w3n/Foto-15-12-2025-00-52-54.jpg?rlkey=4wxsc6pun987a4me1e0z880jo&st=vjuejbsg&raw=1", anim: "animate__backInDown" },
+        { isCounter: true, img: "https://www.dropbox.com/scl/fi/cyqn5rgv2ehks74a4umgz/Foto-14-12-2025-02-43-07.jpg?rlkey=mafffe76hobq6cb5p5p5d6lxs&st=ymco6a3q&raw=1" },
+        { text: "30 dias de<br><span style='color:var(--sp-green)'>risadas</span><br>e fofocas.", img: "https://www.dropbox.com/scl/fi/syqqpnhf2amowocjydn76/Foto-10-12-2025-15-10-20.jpg?rlkey=eihtdcg05mkfcrjrqmvdomgta&st=bn399dcq&raw=1", anim: "animate__bounceIn" },
+        { text: "30 dias<br>descobrindo<br>quem você é.", img: "https://www.dropbox.com/scl/fi/ft8eydm3p9hzwrn88j5o0/Foto-10-12-2025-14-41-52.jpg?rlkey=hakj1gy5pf6c8ans9zawn88x4&st=qmty86df&raw=1", anim: "animate__fadeInUpBig" },
+        { text: "E quer<br>saber?", img: "https://www.dropbox.com/scl/fi/rn5bjqwnrbsujvj2oobh3/Foto-06-12-2025-16-13-45.jpg?rlkey=p9fn3gunxs3o53c5003u83qen&st=kysj3v0v&raw=1", anim: "animate__flipInY" },
+        { text: "Eu amei cada<br><span style='color:var(--pink)'>batida</span><br>desse som.", img: "https://www.dropbox.com/scl/fi/bhnno9y9yl713gusj5ol9/Foto-03-12-2025-05-54-54.jpg?rlkey=1mc8p519nbgu3lxuyf0ec3he8&st=chd7247z&raw=1", anim: "animate__zoomInUp" },
+        { text: "Obrigado por<br>esse mês<br>incrível.", img: "https://www.dropbox.com/scl/fi/wmobvohy0kokqeulvmkxm/Foto-01-12-2025-04-04-11.jpg?rlkey=ti9pgszqajfitmgnsgyg9ub1x&st=06z1ayd0&raw=1", anim: "animate__heartBeat" }
+    ];
+
+    let currentIdx = 0, storyTimeout, loaded = 0;
+    const duration = 15000;
+
+    stories.forEach(s => {
+        const img = new Image(); img.src = s.img;
+        img.onload = () => {
+            loaded++;
+            document.getElementById('loader-fill').style.width = (loaded / stories.length * 100) + '%';
+            if(loaded === stories.length) {
+                const b = document.getElementById('btn-play'); b.innerText = "VER SURPRESA"; b.disabled = false; b.classList.add('ready');
+            }
+        };
+    });
+
+    const fills = stories.map(() => {
+        const b = document.createElement('div'); b.className = 'progress-bar'; b.innerHTML = '<div class="progress-fill"></div>';
+        document.getElementById('progress-header').appendChild(b); return b.querySelector('.progress-fill');
+    });
+
+    function startEverything() {
+        document.getElementById('cover-screen').style.display = 'none';
+        document.getElementById('story-viewport').style.display = 'block';
+        document.getElementById('music').play(); showStory(0);
+    }
+
+    function showStory(idx) {
+        if (idx < 0 || idx >= stories.length) return;
+        currentIdx = idx; clearTimeout(storyTimeout);
+        
+        const s = stories[idx];
+        const bgA = document.querySelector('.bg-layer.active'), bgN = document.querySelectorAll('.bg-layer')[bgA.id === 'bg-1' ? 1 : 0];
+        bgN.style.backgroundImage = `url(${s.img})`; bgA.classList.remove('active'); bgN.classList.add('active');
+
+        const txt = document.getElementById('story-text'), cb = document.getElementById('counter-box'), emo = document.getElementById('emotional-msg');
+        
+        // Reset do contador ao mudar de slide
+        cb.style.display = 'none'; cb.classList.remove('animate__fadeOutDown');
+        emo.style.display = 'none'; emo.innerHTML = "";
+
+        if(!s.isCounter) {
+            txt.style.display = 'block'; txt.innerHTML = s.text; txt.className = `story-h1 animate__animated ${s.anim}`;
+        } else {
+            txt.style.display = 'none'; cb.style.display = 'flex'; runCounter();
+        }
+
+        fills.forEach((f, i) => {
+            f.style.transition = 'none'; f.style.width = i < idx ? '100%' : '0%';
+            if (i === idx) setTimeout(() => { f.style.transition = `width ${duration}ms linear`; f.style.width = '100%'; }, 50);
+        });
+        storyTimeout = setTimeout(nextStory, duration);
+    }
+
+    function runCounter() {
+        const dCol = document.getElementById('slot-days'), mCol = document.getElementById('slot-months'), emo = document.getElementById('emotional-msg'), cb = document.getElementById('counter-box');
+        let dH = ""; for(let i=24; i<=54; i++) dH += `<span>${(i>30?i-30:i)<10?'0'+(i>30?i-30:i):(i>30?i-30:i)}</span>`;
+        dH += `<span>24</span>`; dCol.innerHTML = dH; mCol.innerHTML = "<span>11</span><span>12</span><span>11</span><span>12</span><span>11</span><span>12</span>";
+        dCol.style.transition = mCol.style.transition = "none"; dCol.style.transform = mCol.style.transform = "translateY(0)";
+
+        setTimeout(() => {
+            dCol.style.transition = "transform 4s cubic-bezier(0.15, 1, 0.3, 1)";
+            mCol.style.transition = "transform 3s cubic-bezier(0.15, 1, 0.3, 1)";
+            dCol.style.transform = `translateY(-${31 * 110}px)`; mCol.style.transform = `translateY(-${5 * 110}px)`;
+            
+            setTimeout(() => {
+                cb.classList.add('animate__animated', 'animate__fadeOutDown');
+                setTimeout(() => {
+                    cb.style.display = 'none';
+                    emo.innerHTML = "FORAM OS 30 DIAS MAIS RÁPIDOS DA MINHA VIDA... Talvez porque o tempo voa quando a gente tá com quem gosta. ❤️";
+                    emo.style.display = 'block'; emo.className = "emotional-text animate__animated animate__zoomInDown";
+                    confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+                }, 700);
+            }, 4500);
+        }, 100);
+    }
+
+    function nextStory() { if(currentIdx < stories.length - 1) showStory(currentIdx + 1); }
+    function prevStory() { if(currentIdx > 0) showStory(currentIdx - 1); }
+</script>
